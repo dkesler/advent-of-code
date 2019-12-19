@@ -21,7 +21,7 @@ fun main() {
     println(keyTilesByKey)
 
     val before = System.currentTimeMillis()
-    println(start.navigate(keyTilesByKey, setOf(), 0, Int.MAX_VALUE))
+    println(Solver().navigate(start, keyTilesByKey, setOf(), 0, Int.MAX_VALUE))
     println("time: " + (System.currentTimeMillis() - before))
 }
 
@@ -98,23 +98,24 @@ data class Edge(val key: Char, val distance: Int, val keysRequired: Set<Char>) {
     }
 }
 
-data class CaveTile2(val otherKeys: List<Edge>, val type: Char, var memoTable: MutableMap<Set<Char>, Int> = mutableMapOf()) {
-    fun navigate(keyTilesByKey: Map<Char, CaveTile2>, keys: Set<Char>, currentDistance: Int, bestDistance: Int): Pair<Boolean, Int> {
+data class Solver(val memoTable: MutableMap<Pair<Char, Set<Char>>, Int> = mutableMapOf()) {
+    fun navigate(cur: CaveTile2, keyTilesByKey: Map<Char, CaveTile2>, keys: Set<Char>, currentDistance: Int, bestDistance: Int): Pair<Boolean, Int> {
 
-        if (memoTable.containsKey(keys)) {
-            if (memoTable.getValue(keys) + currentDistance < bestDistance) {
-                println("new best distance found: ${memoTable.getValue(keys) + currentDistance}")
-                return Pair(true, currentDistance + memoTable.getValue(keys))
+        if (memoTable.containsKey(Pair(cur.type, keys))) {
+            val memoValue = memoTable.getValue(Pair(cur.type, keys))
+            if (memoValue + currentDistance < bestDistance) {
+                println("new best distance found: ${memoValue + currentDistance}")
+                return Pair(true, currentDistance + memoValue)
             } else {
                 return Pair(false, bestDistance)
             }
         }
 
-        val reachableKeys = otherKeys.filter{ !it.alreadyAcquired(keys) }.filter { it.hasAllkeys(keys) }.sortedBy { it.distance }
+        val reachableKeys = cur.otherKeys.filter{ !it.alreadyAcquired(keys) }.filter { it.hasAllkeys(keys) }.sortedBy { it.distance }
 
         //we've found all keys
         if (reachableKeys.isEmpty()) {
-            memoTable.put(keys, 0)
+            memoTable.put(Pair(cur.type, keys), 0)
             if (currentDistance < bestDistance) {
                 println("new best distance found: $currentDistance")
             }
@@ -135,7 +136,7 @@ data class CaveTile2(val otherKeys: List<Edge>, val type: Char, var memoTable: M
             if (currentDistance + key.distance < bestDistance) {
                 //find the distance necessary to find all remaining keys
 
-                val subdistance = keyTilesByKey.getValue(key.key).navigate(keyTilesByKey, keys + key.key, currentDistance + key.distance, bestSubdistance ?: bestDistance)
+                val subdistance = navigate(keyTilesByKey.getValue(key.key), keyTilesByKey, keys + key.key, currentDistance + key.distance, bestSubdistance ?: bestDistance)
                 //we have found all keys at a better distance than bestDistance or any subdistance
                 if (subdistance.first && subdistance.second < bestDistance && (bestSubdistance == null || subdistance.second < bestSubdistance) ) {
                     bestKey = key
@@ -145,11 +146,15 @@ data class CaveTile2(val otherKeys: List<Edge>, val type: Char, var memoTable: M
         }
 
         if (bestSubdistance != null) {
-            memoTable.put(keys, bestSubdistance - currentDistance)
+            memoTable.put(Pair(cur.type, keys), bestSubdistance - currentDistance)
             return Pair(true, bestSubdistance)
         } else {
             return Pair(false, bestDistance)
         }
     }
+}
+
+data class CaveTile2(val otherKeys: List<Edge>, val type: Char, var memoTable: MutableMap<Set<Char>, Int> = mutableMapOf()) {
+
 
 }
