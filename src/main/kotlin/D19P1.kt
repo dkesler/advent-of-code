@@ -1,14 +1,25 @@
-import intcode.Computer
-import intcode.loadProgramFromFile
 import intcode.runProgramFromFile
 
 fun main() {
-    val computer = Computer(loadProgramFromFile("src/main/resources/d19p1"))
+    val size = 400L
+    val offset = 800L
 
-    val output = (0L..49).map{x -> (0L..49).map{ listOf(x, it) } }.flatten()
-        .map{ runProgramFromFile("src/main/resources/d19p1", it)}
 
-    println(output)
+    val output = (offset..(offset+size)).map{y -> (offset..(offset+size)).map{ listOf(it, y) } }.flatten()
+        .map{
+            val output = runProgramFromFile("src/main/resources/d19p1", it)
+            //println("in: $it, out: $output")
+            output
+        }
+    //10x10
+    //84, 105
 
-    println(output.filter { it[0] == 1L }.count())
+    println(runProgramFromFile("src/main/resources/d19p1", listOf(815, 1016)))
+    println(runProgramFromFile("src/main/resources/d19p1", listOf(915, 1016)))
+    println(runProgramFromFile("src/main/resources/d19p1", listOf(815, 1116)))
+
+    output.chunked(size.toInt()+1).forEachIndexed{ y, line ->
+        line.forEach{ print(it[0]) }
+        println("")
+    }
 }
