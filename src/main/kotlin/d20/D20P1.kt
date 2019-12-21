@@ -1,9 +1,10 @@
 package d20
 
 import java.io.File
+import kotlin.math.max
 
 fun main() {
-    val tiles = File("src/main/resources/d20p1-test2").readLines()
+    val tiles = File("src/main/resources/d20p1").readLines()
         .map{ it.split("").filter{it.isNotEmpty()} }
 
     //find labelled tile locations
@@ -27,13 +28,18 @@ fun main() {
     val end = nodesByName.getValue("ZZUP")
 
     //findPath
-    println(findPath(start, end, nodesByName, setOf("AAUP"), 0, Int.MAX_VALUE))
+    for (maxDepth in (100..1000)) {
+        val startTime = System.currentTimeMillis()
+        println("max depth $maxDepth")
+        println(Solver().findPath(start, end, nodesByName, setOf(Pair("AAUP", 0)), 0, 0, Int.MAX_VALUE, maxDepth))
+        println("Finished in ${System.currentTimeMillis() - startTime} ms")
+    }
 }
 
 fun getTeleportEdge(tile: LabelledTile, labelledTilesByMapLabel: Map<String, List<LabelledTile>>): List<Edge> {
     return labelledTilesByMapLabel.getValue(tile.originalLabel)
         .filter{it.label != tile.label}
-        .map { Edge(it.label, 1) }
+        .map { Edge(it.label, 1, tile.levelChange) }
 }
 
 fun findDistances(labelledTiles: List<LabelledTile>, tiles: List<List<String>>): Map<String, List<Edge>> {
@@ -63,7 +69,7 @@ fun findDistances(source: LabelledTile, labelledTiles: List<LabelledTile>, tiles
         if (xyToLabel.containsKey(Pair(head.first, head.second))) {
             val label = xyToLabel.getValue(Pair(head.first, head.second))
             if (label != source.label) {
-                edges.add(Edge(label, head.third))
+                edges.add(Edge(label, head.third, 0))
             }
         }
     }
@@ -137,37 +143,52 @@ fun findLabelledTiles(tiles: List<List<String>>): List<LabelledTile> {
     }
 }
 
+class Solver(val memoTable:MutableMap<Pair<String, Int>,Pair<Boolean, Int>> = mutableMapOf()) {
+    fun findPath(current: Node, target: Node, nodes: Map<String, Node>, visited: Set<Pair<String, Int>>, currentLevel: Int, currentDistance: Int, bestDistance: Int, maxDepth: Int): Pair<Boolean, Int> {
+        if (current == target) {
+            return Pair(true, currentDistance)
+        }
 
-fun findPath(current: Node, target: Node, nodes: Map<String, Node>, visited: Set<String>, currentDistance: Int, bestDistance: Int): Pair<Boolean, Int> {
-    if (current == target) {
-        return Pair(true, currentDistance)
-    }
+        if (memoTable.containsKey(Pair(current.name, currentLevel))) {
+            return memoTable.getValue(Pair(current.name, currentLevel))
+        }
 
-    val candidiates = current.neighbors.filter{ !visited.contains(it.end) }.sortedBy { it.dist  }
-    if (candidiates.isEmpty()) {
-        return Pair(false, bestDistance)
-    }
+        val candidiates = current.neighbors.filter{ !visited.contains(Pair(it.end, currentLevel + it.levelChange)) }.filter{
+            (currentLevel == 0 && (it.end == "AAUP" || it.end == "ZZUP" || nodes.getValue(it.end).levelChange == 1 || it.levelChange == 1))
+                    || (currentLevel > 0 && currentLevel < maxDepth && it.end != "AAUP" && it.end != "ZZUP")
+                    || (currentLevel == maxDepth && (it.end != "AAUP" && it.end != "ZZUP") && (nodes.getValue(it.end).levelChange == -1 || it.levelChange == -1))
+        }.sortedBy { it.levelChange * 10 + nodes.getValue(it.end).levelChange }
+        if (candidiates.isEmpty()) {
+            memoTable.put(Pair(current.name, currentLevel), Pair(false, bestDistance))
+            return Pair(false, bestDistance)
+        }
 
-    var bestSubdistance: Int? = null
+        var bestSubdistance: Int? = null
 
-    for (candidate in candidiates) {
-        if (currentDistance + candidate.dist < bestDistance) {
-            val candidateNode = nodes.getValue(candidate.end)
-            val subdistance = findPath(candidateNode, target, nodes, visited + current.name, currentDistance + candidate.dist, bestSubdistance ?: bestDistance)
-            if (subdistance.first && subdistance.second < bestDistance && (bestSubdistance == null || subdistance.second < bestSubdistance)) {
-                bestSubdistance = subdistance.second
+        for (candidate in candidiates) {
+            if (currentDistance + candidate.dist < bestDistance) {
+                val candidateNode = nodes.getValue(candidate.end)
+                val subdistance = findPath(candidateNode, target, nodes, visited + Pair(current.name, currentLevel), currentLevel + candidate.levelChange, currentDistance + candidate.dist, bestSubdistance ?: bestDistance, maxDepth)
+                if (subdistance.first && subdistance.second < bestDistance && (bestSubdistance == null || subdistance.second < bestSubdistance)) {
+                    bestSubdistance = subdistance.second
+                }
             }
         }
-    }
 
-    if (bestSubdistance == null) {
-        return Pair(false, bestDistance)
-    } else {
-        return Pair(true, bestSubdistance)
+        if (bestSubdistance == null) {
+            memoTable.put(Pair(current.name, currentLevel), Pair(false, bestDistance))
+            return Pair(false, bestDistance)
+        } else {
+            //println("new best distance found: $bestSubdistance")
+            //memoTable.put(Pair(current.name, currentLevel), Pair(true, bestSubdistance))
+            return Pair(true, bestSubdistance)
+        }
     }
 }
 
-data class Edge(val end: String, val dist: Int)
+
+
+data class Edge(val end: String, val dist: Int, val levelChange: Int)
 data class Node(val name: String, val levelChange: Int, var neighbors: List<Edge> = listOf())
 data class LabelledTile(val x: Int, val y: Int, val label: String, val originalLabel: String, val levelChange: Int)
 
