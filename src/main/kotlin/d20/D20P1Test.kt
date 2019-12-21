@@ -4,14 +4,14 @@ import java.lang.RuntimeException
 
 fun main() {
 
-    val aa = Node("AA")
-    val bc1 = Node("BC1")
-    val bc2 = Node("BC2")
-    val de1 = Node("DE1")
-    val de2 = Node("DE2")
-    val fg1 = Node("FG1")
-    val fg2 = Node("FG2")
-    val zz = Node("ZZ")
+    val aa = Node("AA", 0)
+    val bc1 = Node("BC1", 0)
+    val bc2 = Node("BC2", 0)
+    val de1 = Node("DE1", 0)
+    val de2 = Node("DE2", 0)
+    val fg1 = Node("FG1", 0)
+    val fg2 = Node("FG2", 0)
+    val zz = Node("ZZ", 0)
 
     aa.neighbors = listOf(
         Edge("ZZ", 26),

@@ -3,8 +3,8 @@ package d20
 import java.io.File
 
 fun main() {
-    val tiles = File("src/main/resources/d20p1").readLines()
-        .map{ it.split("") }
+    val tiles = File("src/main/resources/d20p1-test2").readLines()
+        .map{ it.split("").filter{it.isNotEmpty()} }
 
     //find labelled tile locations
     val labelledTiles = findLabelledTiles(tiles)
@@ -16,16 +16,18 @@ fun main() {
 
     //create nodes + edges
     val nodes = labelledTiles.map { lt ->
-        Node(lt.label, edges.getValue(lt.label).plus(getTeleportEdge(lt, labelledTilesByMapLabel)))
+        Node(lt.label, lt.levelChange, edges.getValue(lt.label).plus(getTeleportEdge(lt, labelledTilesByMapLabel)))
     }
+
+    println(nodes)
 
     val nodesByName = nodes.map{ Pair(it.name, it) }.toMap()
 
-    val start = nodesByName.getValue("AA1")
-    val end = nodesByName.getValue("ZZ1")
+    val start = nodesByName.getValue("AAUP")
+    val end = nodesByName.getValue("ZZUP")
 
     //findPath
-    println(findPath(start, end, nodesByName, setOf("AA1"), 0, Int.MAX_VALUE))
+    println(findPath(start, end, nodesByName, setOf("AAUP"), 0, Int.MAX_VALUE))
 }
 
 fun getTeleportEdge(tile: LabelledTile, labelledTilesByMapLabel: Map<String, List<LabelledTile>>): List<Edge> {
@@ -81,26 +83,45 @@ fun findLabelledTiles(tiles: List<List<String>>): List<LabelledTile> {
                 || isLabel(tiles[tile.second-1][tile.first])
     }
 
-    fun getMapLabel(tile: Triple<Int, Int, String>): String {
+    data class MapLabel(val label: String, val levelChange: Int)
+    fun getMapLabel(tile: Triple<Int, Int, String>): MapLabel {
         if (isLabel(tiles[tile.second][tile.first+1])) {
-            return tiles[tile.second][tile.first+1] + tiles[tile.second][tile.first+2]
+            val label = tiles[tile.second][tile.first + 1] + tiles[tile.second][tile.first + 2]
+            if (tile.first+3 >= tiles[tile.second].size) {
+                return MapLabel(label, -1)
+            } else {
+                return MapLabel(label, 1)
+            }
         } else if (isLabel(tiles[tile.second][tile.first-1])) {
-            return tiles[tile.second][tile.first-2] + tiles[tile.second][tile.first-1]
+            val label = tiles[tile.second][tile.first - 2] + tiles[tile.second][tile.first - 1]
+            if (tile.first-3 < 0) {
+                return MapLabel(label, -1)
+            } else {
+                return MapLabel(label, 1)
+            }
         } else if (isLabel(tiles[tile.second+1][tile.first])) {
-            return tiles[tile.second+1][tile.first] + tiles[tile.second+2][tile.first]
+            val label = tiles[tile.second + 1][tile.first] + tiles[tile.second + 2][tile.first]
+            if (tile.second+3 >= tiles.size) {
+                return MapLabel(label, -1)
+            } else {
+                return MapLabel(label, 1)
+            }
         } else {
-            return tiles[tile.second-2][tile.first] + tiles[tile.second-1][tile.first]
+            val label = tiles[tile.second - 2][tile.first] + tiles[tile.second - 1][tile.first]
+            if (tile.second-3 < 0) {
+                return MapLabel(label, -1)
+            } else {
+                return MapLabel(label, 1)
+            }
         }
     }
 
-    val usedLabels = mutableSetOf<String>()
     fun getLabel(tile: Triple<Int, Int, String>): String {
         val mapLabel = getMapLabel(tile)
-        if (usedLabels.contains(mapLabel)) {
-            return mapLabel + "2"
+        if (mapLabel.levelChange == 1) {
+            return mapLabel.label + "DN"
         } else {
-            usedLabels.add(mapLabel)
-            return mapLabel + "1"
+            return mapLabel.label + "UP"
         }
     }
 
@@ -110,7 +131,10 @@ fun findLabelledTiles(tiles: List<List<String>>): List<LabelledTile> {
         }
     }.flatten().filter { it.third == "." }
 
-    return emptyTiles.filter(::hasLabel).map{ LabelledTile(it.first, it.second, getLabel(it), getMapLabel(it) ) }
+    return emptyTiles.filter(::hasLabel).map{
+        val mapLabel = getMapLabel(it)
+        LabelledTile(it.first, it.second, getLabel(it), mapLabel.label, mapLabel.levelChange)
+    }
 }
 
 
@@ -144,7 +168,7 @@ fun findPath(current: Node, target: Node, nodes: Map<String, Node>, visited: Set
 }
 
 data class Edge(val end: String, val dist: Int)
-data class Node(val name: String, var neighbors: List<Edge> = listOf())
-data class LabelledTile(val x: Int, val y: Int, val label: String, val originalLabel: String)
+data class Node(val name: String, val levelChange: Int, var neighbors: List<Edge> = listOf())
+data class LabelledTile(val x: Int, val y: Int, val label: String, val originalLabel: String, val levelChange: Int)
 
 
