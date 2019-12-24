@@ -1,11 +1,14 @@
 import java.io.File
 import java.lang.Long.parseLong
+import java.math.BigInteger
 import java.util.regex.Pattern
 
 fun main() {
+
     val deckSize = 119315717514047L
-    //val totalShuffles = 101741582076661L
-    val totalShuffles = 1L
+    val totalShuffles = 101741582076661L
+    //val deckSize = 10007L //2019->6061->5233
+    //val totalShuffles = 1L
 
     val moves = File("src/main/resources/d22p1").readLines()
         .map{toShuffleA(it, deckSize)}
@@ -28,9 +31,25 @@ fun main() {
         }
     }
 */
-
     val ax = moves.fold(axplusbmodm(1, 0, deckSize), {acc, op -> op(acc) } )
-    println(ax)
+    val axes = mutableListOf(ax)
+    for (exp in 1..46) {
+        val axnext = axes[exp-1].combine(axes[exp-1])
+        axes.add(axnext)
+    }
+
+    var shufflesRemaining = totalShuffles
+    var totalAx = axplusbmodm(1, 0, deckSize)
+    for (exp in 46.downTo(0)) {
+        val exp2 = BigInteger.valueOf(2).pow(exp).toLong()
+        while(exp2 <= shufflesRemaining) {
+            totalAx = totalAx.combine(axes[exp])
+            shufflesRemaining -= exp2
+        }
+    }
+
+    println(totalAx)
+    println(totalAx.solveForX(2020))
 
 
 /*
@@ -40,11 +59,6 @@ fun main() {
     )
 */
 
-    val out = (ax.a * 65523374817902 + ax.b) % deckSize
-    println(out)
-
-    //65523374817902
-    //println(shuffled)
 }
 
 var lastTiming = System.currentTimeMillis()
@@ -136,8 +150,23 @@ fun incrementNInv(afterPosition: Long, inc: Long, deckSize: Long): Long {
 data class axplusbmodm(val a: Long, val b: Long, val m: Long) {
     fun times(n: Long): axplusbmodm { return axplusbmodm((a*n) % m, (b*n) % m, m) }
     fun plus(c: Long): axplusbmodm { return axplusbmodm(a, (b+c) % m, m) }
-}
+    fun combine(ax: axplusbmodm): axplusbmodm { return ax.times(a).plus(b) }
+    fun solveForX(y: Long) : Long {
+        //y = (ax + b) % m
+        //x = (y - b + N*m )/a for some N
+        var N = 0L
+        while ( (y - b + N*m) % a  != 0L) {
+            N++
+        }
+        return (y - b + N*m) / a
+    }
+}//N>1884211519518
 
-
-
-
+//1x -        91309475543446
+//2x -        63303233572845
+//4x -         7290749631643
+//68x -        4627026223884
+//1768 -        986964306937   //121
+//213928 -      106963625330 //1116
+//238743648 -    55688354233 //2142
+//511627637664 - 24425607272    //4885
