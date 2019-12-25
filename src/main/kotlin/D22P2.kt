@@ -5,53 +5,29 @@ import java.util.regex.Pattern
 
 fun main() {
 
-    //val deckSize = 119315717514047L
-    //val totalShuffles = 101741582076661L
-    val deckSize = 10007L //2019->6061->5233
-    val totalShuffles = 1L
-    //val deckSize = 10L
+    val deckSize = 119315717514047L
+    val totalShuffles = 101741582076661L
+    //val deckSize = 10007L //2019->6061->5233
     //val totalShuffles = 1L
+//    val deckSize = 7L
+//    val totalShuffles = 1L
 
-/*
     val moves = File("src/main/resources/d22p1").readLines()
-        .map{toShuffleAInv(it, deckSize)}
-*/
-    /*
-    0 1 2 3 4 5 6 //inc 2
-    0 4 1 5 2 6 3 //inc 4
-    0 1 . . 4 5 .
-
-    0 1 2 3 4 5 6 //inc 3
-    0 5 3 1 6 4 2 //inc 5
-    0 . . 3 . 5 .
-
-    0 1 2 3 4 5 6 //inc 4
-    0 2 4 6 1 3 5 //inc 2
-
-    0 1 2 3 4 5 6 //inc 6
-    0 6 5 4 3 2 1 //inc 6
-    0 . . . . 5 6
-
-
-    N*inc % m == 1
-    0 1 2 3 4 //inc 2
-    0 3 1 4 2 //inc 3
-    0 1 . 3 .
-
-
-
-    0 1 2 3 4 5 6 7 8 9 //inc 3
-    0 7 4 1 8 5 2 9 6 3 //inc 7
-    0 . . . 4 . . 7 . .
-
-     */
-
-
-    val moves = listOf("deal with increment 53")
         .map{toShuffleA(it, deckSize)}
 
-    val movesRev = listOf("deal with increment 53")
+    val movesRev = File("src/main/resources/d22p1").readLines()
         .map{toShuffleAInv(it, deckSize)}
+
+
+/*
+    val moves = listOf("cut 2", "deal with increment 2")
+    //val moves = listOf("cut 500", "deal with increment 53", "cut 619")
+        .map{toShuffleA(it, deckSize)}
+
+    //val movesRev = listOf("cut 500", "deal with increment 53", "cut 619")
+    val movesRev = listOf("cut 2", "deal with increment 2")
+        .map{toShuffleAInv(it, deckSize)}
+*/
 
 
     //val moves = File("src/main/resources/d22p1").readLines()
@@ -76,7 +52,29 @@ fun main() {
     println(ax)
     val axInv = movesRev.foldRight(axplusbmodm(1, 0, deckSize), {op, acc -> op(acc) } )
     println(axInv)
-    val axes = mutableListOf(ax)
+
+/*
+    for (x in 0 until deckSize) {
+        print("$x ")
+    }
+    println("")
+
+    val transformed = (0 until deckSize).map{ Pair(ax.solveForY(it), it) }.toMap()
+
+    for (x in 0 until deckSize) {
+        val y = transformed.getValue(x)
+        print("$y ")
+    }
+    println("")
+
+    for (x in 0 until deckSize) {
+        val xp = axInv.solveForY(ax.solveForY(x))
+        print("$xp ")
+    }
+    println("")
+*/
+
+    val axes = mutableListOf(axInv)
     for (exp in 1..46) {
         val axnext = axes[exp-1].combine(axes[exp-1])
         axes.add(axnext)
@@ -93,48 +91,11 @@ fun main() {
     }
 
     println(totalAx)
-/*
-    for (x in (0..deckSize)) {
-        val y = totalAx.solveForY(x)
-        if (y == 2020L) {
-            println(x)
-            break
-        }
-        printWithTiming(x)
-    }
-*/
 
-//1x -          91309475543446
-//2x -          63303233572845
-//4x -           7290749631643
-//68x -          4627026223884
-//1768 -          986964306937   //121
-//213928 -        106963625330 //1116
-//238743648 -      55688354233 //2142
-//511627637664 -   24425607272    //4885
-//112986659707700 - 3374009673
+    val x = axInv.solveForY(2020)
+    val y = ax.solveForY(x)
+    println("$x -> 2020 | $y")
 
-/*    println(totalAx.solveForY(0))
-    println(totalAx.solveForY(1))
-    println(totalAx.solveForY(2))
-    println(totalAx.solveForY(4))
-    println(totalAx.solveForY(68))
-    println(totalAx.solveForY(1768))
-    println(totalAx.solveForY(213928L))
-    println(totalAx.solveForY(238743648))
-    println(totalAx.solveForY(511627637664))
-    println(totalAx.solveForY(112986659707700))*/
-    //println(totalAx.solveForX(2020))
-    println(totalAx.solveForY(6061))
-    println(totalAx.solveForX(2019))
-
-
-/*
-    val shuffled = (1..totalShuffles).fold(
-        2020L,
-        {acc, i -> moves.fold(acc, { acc2, op -> op(acc2) })}
-    )
-*/
 
 }
 
@@ -147,15 +108,16 @@ fun printWithTiming(i: Long) {
     }
 }
 
+
 fun toShuffleInv(line: String, deckSize: Long): (Long) -> Long {
     val incMatcher = Pattern.compile("deal with increment ([0-9]+)").matcher(line)
     if (incMatcher.matches()) {
-        return { incrementNInv(it, java.lang.Long.parseLong(incMatcher.group(1)), deckSize)  }
+        return { incrementNInv(it, parseLong(incMatcher.group(1)), deckSize)  }
     }
 
     val cutMatcher = Pattern.compile("cut (-?[0-9]+)").matcher(line)
     if (cutMatcher.matches()) {
-        return { cutNInv(it, java.lang.Long.parseLong(cutMatcher.group(1)), deckSize) }
+        return { cutNInv(it, parseLong(cutMatcher.group(1)), deckSize) }
     }
 
     val newMatcher = Pattern.compile("deal into new stack").matcher(line)
@@ -188,7 +150,7 @@ fun toShuffleA(line: String, deckSize: Long): (axplusbmodm) -> axplusbmodm {
 fun toShuffleAInv(line: String, deckSize: Long): (axplusbmodm) -> axplusbmodm {
     val incMatcher = Pattern.compile("deal with increment ([0-9]+)").matcher(line)
     if (incMatcher.matches()) {
-        return { ax -> ax.times(deckSize - parseLong(incMatcher.group(1)) - 1) }
+        return { ax -> ax.times( axplusbmodm(parseLong(incMatcher.group(1)), 0, deckSize).solveForX(1) ) }
     }
 
     val cutMatcher = Pattern.compile("cut (-?[0-9]+)").matcher(line)
@@ -224,6 +186,13 @@ fun cutNInv(afterPosition: Long, cut: Long, deckSize: Long): Long {
     //afterPosition = beforePosition - cut
 
     //afterPosition = (beforePosition - cut) % decksize
+    //y = (x + b) % m
+
+    //0 1 2 3 4 5   //cut 2
+    //2 3 4 5 0 1   //
+
+
+    //beforePosition = (afterPosition + Nm + cut) % m for some N
 
     if (afterPosition >= deckSize - cut) { //the card was cut to the back
         return afterPosition - (deckSize - cut)
@@ -234,6 +203,7 @@ fun cutNInv(afterPosition: Long, cut: Long, deckSize: Long): Long {
 
 fun incrementNInv(afterPosition: Long, inc: Long, deckSize: Long): Long {
     //afterPosition = (beforePosition*increment) % deckSize
+    //before = (after * inc') % deckSize
     //2 == (before * 3) % 10, before=4
     // before = (after + N*decksize)/increment
     var N = 0L
@@ -263,10 +233,10 @@ data class axplusbmodm(val a: Long, val b: Long, val m: Long) {
         //x = (y - b - N*m )/a for some N
         //N = (y - ax - b)/m
         var N = 0L
-        while ( (y - b - N*m) % a  != 0L) {
+        while ( (y - b + N*m) % a  != 0L) {
             N++
         }
-        return mod((y - b - N*m) / a)
+        return mod((y - b + N*m) / a)
     }
     fun solveForY(x: Long) : Long {
         val l = (a * x + b) % m
