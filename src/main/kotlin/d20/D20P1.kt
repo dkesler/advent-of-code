@@ -1,10 +1,9 @@
 package d20
 
 import java.io.File
-import kotlin.math.max
 
 fun main() {
-    val tiles = File("src/main/resources/d20p1").readLines()
+    val tiles = File("src/main/resources/d20/d20p1").readLines()
         .map{ it.split("").filter{it.isNotEmpty()} }
 
     //find labelled tile locations
