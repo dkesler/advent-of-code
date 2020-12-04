@@ -31,9 +31,5 @@ fun main() {
         println(slope)
         println(treeCount)
     }
-
-
-
     println(treeMult);
-
 }
