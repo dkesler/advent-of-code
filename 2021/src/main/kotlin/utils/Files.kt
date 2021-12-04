@@ -1,6 +1,6 @@
 package utils
 
-//blocks
+//blocks/3d grid
 
 fun readList(filename: String): List<String> {
     val content = Class::class.java.getResource(filename).readText()
