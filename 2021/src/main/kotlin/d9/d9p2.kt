@@ -17,7 +17,7 @@ fun main() {
         }
     }.flatten().filter{it.first}.map{ Pair(it.second, it.third) }
 
-    val basins = lowPoints.map { findBasin(g, it) }
+    val basins = lowPoints.map { findBasin(g, it) }.toSet()
     val threeLargestBasins = basins.map{it.size}.sortedDescending().take(3)
     println(threeLargestBasins[0] * threeLargestBasins[1] * threeLargestBasins[2])
 }
