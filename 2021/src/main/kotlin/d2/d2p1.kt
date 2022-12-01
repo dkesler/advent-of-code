@@ -1,7 +1,6 @@
 package d2
 
 import utils.readList
-import utils.readLongList
 
 fun main() {
     val list = readList("/d2/d2p1")

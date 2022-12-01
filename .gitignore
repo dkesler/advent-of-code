@@ -5,3 +5,5 @@ out/
 .gradle/
 build/
 .DS_Store
+
+*/src/main/resources/*

@@ -3,7 +3,7 @@ package d21
 import utils.*
 
 fun main() {
-    //val lines = readList("/d21/d21p1")
+    //val lines = utils.readList("/d21/d21p1")
     val p1Start = 10
     val p2Start = 6
 
