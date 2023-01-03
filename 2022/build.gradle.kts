@@ -8,4 +8,5 @@ plugins {
 
 dependencies {
   implementation(project("::utils"))
+  implementation("com.google.code.gson:gson:2.8.2")
 }
