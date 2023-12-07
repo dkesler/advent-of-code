@@ -13,6 +13,8 @@ fun readBlocks(filename: String): List<List<String>> {
         }
     }
 
+    if (currentBlock.isNotEmpty()) blocks.add(currentBlock.toList())
+
     return blocks.toList()
 }
 
