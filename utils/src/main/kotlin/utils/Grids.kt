@@ -136,8 +136,6 @@ object Grids {
         ).filter{ it.row in grid.indices && it.col in grid[it.row].indices}.toSet()
     }
 
-    //full floodfill
-
     //dfs
     //bfs
     //a*?

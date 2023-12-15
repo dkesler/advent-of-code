@@ -140,8 +140,9 @@ class GridsTests {
                         )
                 ),
                 Grids.fullFloodFill(
-                        grid
-                ) { last, next -> last.value == next.value }
+                        grid,
+                        { last, next -> last.value == next.value }
+                )
         )
     }
 

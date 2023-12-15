@@ -37,7 +37,7 @@ fun main() {
 
     val fills = Grids.fullFloodFill(
             gridx2,
-            { _, next -> next.toPoint() !in visitedX2 },
+            { next -> next.toPoint() !in visitedX2 },
             { start -> start.toPoint() !in visitedX2 }
     )
 
