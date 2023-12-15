@@ -109,12 +109,16 @@ object Grids {
         return visited
     }
 
-    fun <T> fullFloodFill(grid: List<List<T>>, floodTo: (PointValue<T>, PointValue<T>) -> Boolean): Set<Set<Point>> {
+    fun <T> fullFloodFill(grid: List<List<T>>, floodTo: (PointValue<T>) -> Boolean, fillFrom: (PointValue<T>) -> Boolean = {_->true}): Set<Set<Point>> {
+        return fullFloodFill(grid, { _, next -> floodTo(next) }, fillFrom)
+    }
+
+    fun <T> fullFloodFill(grid: List<List<T>>, floodTo: (PointValue<T>, PointValue<T>) -> Boolean, fillFrom: (PointValue<T>) -> Boolean = {_->true}): Set<Set<Point>> {
         val fills = mutableSetOf<Set<Point>>()
         val filled = mutableSetOf<Point>()
 
         for (point in points(grid)) {
-            if (point !in filled) {
+            if (point !in filled && fillFrom(PointValue(point.row, point.col, grid[point.row][point.col]))) {
                 val fill = floodfill(grid, point, floodTo)
                 fills.add(fill)
                 filled.addAll(fill)
