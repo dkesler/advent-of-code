@@ -137,6 +137,9 @@ object Grids {
     }
 
     //dfs
+/*    fun <T> dfs(grid: List<List<T>>, start: Point, mayExplore: (PointValue<T>) -> Boolean):  {
+
+    }*/
     //bfs
     //a*?
 }
