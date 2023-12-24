@@ -23,34 +23,10 @@ data class Box(val rowRange: IntRange, val colRange: IntRange) {
         return (rowRange.first in other.rowRange || rowRange.last in other.rowRange || other.rowRange.first in rowRange || other.rowRange.last in rowRange) &&
                 (colRange.first in other.colRange || colRange.last in other.colRange || other.colRange.first in colRange || other.colRange.last in colRange)
     }
-
-    fun canExpandLeft(boxes: MutableSet<Box>): Boolean {
-        if (colRange.first-1 < 0) return false
-        val newBox = Box(rowRange, (colRange.first-1..colRange.last))
-        return boxes.none{ newBox.intersects(it) }
-    }
-
-    fun canExpandRight(boxes: MutableSet<Box>, maxCol: Int): Boolean {
-        if (colRange.last+1 > maxCol) return false
-        val newBox = Box(rowRange, (colRange.first..colRange.last+1))
-        return boxes.none{ newBox.intersects(it) }
-    }
-
-    fun canExpandUp(boxes: MutableSet<Box>): Boolean {
-        if (rowRange.first-1 < 0) return false
-        val newBox = Box( (rowRange.first-1..rowRange.last), colRange)
-        return boxes.none{ newBox.intersects(it) }
-    }
-
-    fun canExpandDown(boxes: MutableSet<Box>, maxRow: Int): Boolean {
-        if (rowRange.last+1 > maxRow) return false
-        val newBox = Box( (rowRange.first..rowRange.last+1), colRange)
-        return boxes.none{ newBox.intersects(it) }
-    }
 }
 
 fun main() {
-    val lines = readList("/d18test.txt")
+    val lines = readList("/d18.txt")
     val digs = lines.map {
         val s = it.split(" ")
         //Pair(s[0], s[1].toInt())
@@ -89,7 +65,7 @@ fun main() {
     val maxRow = boxes.maxOf{it.rowRange.last}
     val maxCol = boxes.maxOf{it.colRange.last}
 
-    val boxesNormalized = boxes.map{Box( (it.rowRange.first-minRow..it.rowRange.last-minRow), (it.colRange.first-minCol..it.colRange.last-minCol))}.toMutableSet()
+    val boxesNormalized = boxes.map{Box( (it.rowRange.first-minRow..it.rowRange.last-minRow), (it.colRange.first-minCol..it.colRange.last-minCol))}.toMutableList()
     val trench = boxesNormalized.toSet()
     val rows = maxRow - minRow + 1
     val cols = maxCol - minCol + 1
@@ -101,36 +77,70 @@ fun main() {
     var row = 0
     var col = 0
     while (row < rows) {
+        val boxesInRow = boxesNormalized.filter{ row in it.rowRange }.sortedBy{it.colRange.first}
+        if (boxesInRow.map{ it.colRange.last - it.colRange.first + 1 }.sum() == cols) {
+            row = boxesInRow.minOf{ it.rowRange.last}
+        }
+
         while (col < cols) {
             val pt = Point(row, col)
             val inBox = boxesNormalized.find{ it.contains(pt)}
             if (inBox != null) {
+
                 col = inBox.colRange.last+1
             } else {
-                var box = Box( (pt.row..pt.row), (pt.col..pt.col))
-                while(box.canExpandRight(boxesNormalized, maxNormalizedCol)) box = Box(box.rowRange, (box.colRange.first..box.colRange.last+1))
-                while(box.canExpandDown(boxesNormalized, maxNormalizedRow)) box = Box( (box.rowRange.first..box.rowRange.last+1), box.colRange)
-                boxesNormalized.add(box)
-                col = box.colRange.last + 1
+                val boxesInRowToRight = boxesNormalized.filter{ row in it.rowRange && it.colRange.first > col }
+                val maxWidth = boxesInRowToRight.minOfOrNull{ it.colRange.first - 1 } ?: maxNormalizedCol
+                val colSpan = (pt.col..maxWidth)
+                val boxesInColsBelow = boxesNormalized.filter {
+                    it.rowRange.first > row &&
+                    (it.colRange.first in colSpan || it.colRange.last in colSpan || colSpan.first in it.colRange || colSpan.last in it.colRange)
+                }
+                val maxHeight = boxesInColsBelow.minOfOrNull{ it.rowRange.first - 1} ?: maxNormalizedRow
+
+                boxesNormalized.add(Box(pt.row..maxHeight, colSpan))
+                col = maxWidth+1
             }
         }
         col = 0
         row += 1
     }
 
-    boxesNormalized.removeIf{ it !in trench &&
-            (it.rowRange.first == 0 || it.rowRange.last == maxNormalizedRow || it.colRange.first == 0 || it.colRange.last == maxNormalizedCol)
+
+    val mergePairs = mutableSetOf<Pair<Box, Box>>()
+
+    for (b1 in boxesNormalized.indices) {
+        for (b2 in (b1+1 until boxesNormalized.size)) {
+            val box1 = boxesNormalized[b1]
+            val box2 = boxesNormalized[b2]
+            if (box1 !in trench && box2 !in trench) {
+                val expandedBox1 = Box(box1.rowRange.first - 1..box1.rowRange.last + 1, (box1.colRange.first - 1..box1.colRange.last + 1))
+                if ( box2.intersects(expandedBox1)) {
+                    mergePairs.add(Pair(box1, box2))
+                }
+            }
+        }
     }
 
-/*    for (row in (0..maxNormalizedRow)) {
-        for (col in 0..maxNormalizedCol) {
-            val pt = Point(row, col)
-            if (trench.any{ it.contains(pt)}) print('$')
-            else if ( boxesNormalized.any{it.contains(pt)}) print('#')
-            else print('.')
+    val toKill = mutableSetOf<Box>()
+    for (box in boxesNormalized) {
+        if (box !in trench) {
+            var added = false
+            var toMerge = setOf(box)
+            do {
+                added = false
+                val next = mergePairs.filter { it.first in toMerge || it.second in toMerge }.flatMap { listOf(it.first, it.second) }.toSet()
+                if (next != toMerge) added = true
+                toMerge = next
+            } while (added)
+
+            if (toMerge.any { it.rowRange.first == 0 || it.rowRange.last == maxNormalizedRow || it.colRange.first == 0 || it.colRange.last == maxNormalizedCol }) {
+                toKill.add(box)
+            }
         }
-        println()
-    }*/
+    }
+
+    boxesNormalized.removeIf{ it in toKill}
 
     println(
             boxesNormalized.sumOf{ it.size() }

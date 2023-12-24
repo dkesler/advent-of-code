@@ -1,5 +1,6 @@
 package utils
 
+import java.util.*
 import kotlin.math.abs
 
 open class PointBase(open val row: Int, open val col: Int) {
@@ -136,10 +137,68 @@ object Grids {
         ).filter{ it.row in grid.indices && it.col in grid[it.row].indices}.toSet()
     }
 
-    //dfs
-/*    fun <T> dfs(grid: List<List<T>>, start: Point, mayExplore: (PointValue<T>) -> Boolean):  {
+    data class GridSearch(val path: List<Point>, val cost: Long)
+    fun <T> aStar(
+            grid: List<List<T>>,
+            start: Point,
+            target: Point,
+            cost: (Point, Point) -> Long,
+            heuristic: (Point) -> Long
+    ): GridSearch {
 
-    }*/
-    //bfs
-    //a*?
+        val best = mutableMapOf<Point, GridSearch>()
+        val pq = PriorityQueue<Point>{ a, b -> (best[a]!!.cost + heuristic(a)).compareTo(best[b]!!.cost + heuristic(b)) }
+        pq.add(start)
+        best[start] = GridSearch(listOf(), 0)
+
+        while(pq.isNotEmpty()) {
+            val current = pq.poll()
+            if (current == target) return best[target]!!
+
+            val neighbors = neighbors(current, grid)
+            for (n in neighbors) {
+                val nCost = best[current]!!.cost + cost(current, n)
+                if (n !in best || nCost < best[n]!!.cost) {
+                    best[n] = GridSearch(best[current]!!.path + current, nCost)
+                    pq.add(n)
+                }
+            }
+        }
+
+        throw Error("Could not finish search")
+    }
+
+    data class GraphSearch<T>(val path: List<T>, val cost: Long)
+    fun <T> aStar(
+            starts: Set<T>,
+            isTarget: (T) -> Boolean,
+            neighbors: (T) -> Set<T>,
+            cost: (T, T) -> Long,
+            heuristic: (T) -> Long
+    ): GraphSearch<T> {
+
+        val best = mutableMapOf<T, GraphSearch<T>>()
+        val pq = PriorityQueue<T>{ a, b -> (best[a]!!.cost + heuristic(a)).compareTo(best[b]!!.cost + heuristic(b)) }
+        starts.forEach{ best[it] = GraphSearch(listOf(), 0) }
+        pq.addAll(starts)
+
+        while(pq.isNotEmpty()) {
+            val current = pq.poll()
+            if (isTarget(current)) return best[current]!!
+
+            val ns = neighbors(current)
+            for (n in ns) {
+                val nCost = best[current]!!.cost + cost(current, n)
+                if (n !in best || nCost < best[n]!!.cost) {
+                    best[n] = GraphSearch(best[current]!!.path + current, nCost)
+                    pq.add(n)
+                }
+            }
+        }
+
+        throw Error("Could not finish search")
+    }
+
+
+    //floodfills/a* on sparse grid and/or graph?
 }
