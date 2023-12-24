@@ -6,8 +6,8 @@ If it is possible to hit all hailstones in one throw as the problem states,
 then any solution to the first 3 hailstones must hit all possible hailstones
 
 x1-3 and vx1-3 are constants. all other values are variables.  Each equation represents
-the time at which the (unknown) starting postion and velocity for each dimension will
-intersect with the known hailstone.  The time must be the same for each hailstone.  
+the time at which the (unknown) starting postion and velocity for each dimension of the thrown stone will
+intersect with the known hailstone.  The time must be the same for each target hailstone.  
         x0 + vx0 * t1 == x1 + vx1 * t1
         x0 + vx0 * t2 == x2 + vx2 * t2
         x0 + vx0 * t3 == x3 + vx3 * t3
