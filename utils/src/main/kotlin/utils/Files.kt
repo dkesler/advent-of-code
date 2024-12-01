@@ -5,11 +5,11 @@ fun readBlocks(filename: String): List<List<String>> {
     var currentBlock = mutableListOf<String>()
     val content = {}.javaClass.getResource(filename)!!.readText()
     for (line in content.split("\n")) {
-        if (line == "" && currentBlock.isNotEmpty()) {
+        if (line.trim() == "" && currentBlock.isNotEmpty()) {
             blocks.add(currentBlock.toList())
             currentBlock = mutableListOf()
         } else {
-            currentBlock.add(line)
+            currentBlock.add(line.trim())
         }
     }
 
@@ -39,17 +39,17 @@ fun read3dLongGrid(filename: String):  List<List<List<Long>>> {
 
 fun readList(filename: String): List<String> {
     val content = {}.javaClass.getResource(filename)!!.readText()
-    return content.split("\n").filter{it != ""}
+    return content.split("\n").map{it.trim()}.filter{it != ""}
 }
 
 fun readLongList(filename: String): List<Long> {
     val content = {}.javaClass.getResource(filename)!!.readText()
-    return content.split("\n").filter{it != ""}.map{it.toLong()}
+    return content.split("\n").filter{it != ""}.map{it.trim().toLong()}
 }
 
 fun <T> readGrid(filename: String, gridSeparator: String = "", cellProcessor: (String)->T ): List<List<T>> {
     val content = {}.javaClass.getResource(filename)!!.readText()
-    val list = content.split("\n").filter{it != ""}
+    val list = content.split("\n").map{it.trim()}.filter{it != ""}
     return list.map{it.split(gridSeparator).filter{it != ""}.map(cellProcessor)}
 }
 
