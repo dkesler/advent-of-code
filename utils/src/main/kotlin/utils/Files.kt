@@ -49,8 +49,8 @@ fun readLongList(filename: String): List<Long> {
 
 fun <T> readGrid(filename: String, gridSeparator: String = "", cellProcessor: (String)->T ): List<List<T>> {
     val content = {}.javaClass.getResource(filename)!!.readText()
-    val list = content.split("\n").map{it.trim()}.filter{it != ""}
-    return list.map{it.split(gridSeparator).filter{it != ""}.map(cellProcessor)}
+    val list = content.split("\n").map{it.trim()}.filter{it.isNotBlank()}
+    return list.map{it.split(gridSeparator).filter{it.isNotBlank()}.map(cellProcessor)}
 }
 
 fun readCharGrid(filename: String, gridSeparator: String = ""): List<List<Char>> {
