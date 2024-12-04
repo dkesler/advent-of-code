@@ -137,6 +137,21 @@ object Grids {
         ).filter{ it.row in grid.indices && it.col in grid[it.row].indices}.toSet()
     }
 
+    fun <T> diagNeighbors(point: Point, grid: List<List<T>>): Set<Point> {
+        return setOf(
+            Point(point.row, point.col+1),
+            Point(point.row, point.col-1),
+            Point(point.row+1, point.col),
+            Point(point.row-1, point.col),
+            Point(point.row+1, point.col+1),
+            Point(point.row-1, point.col-1),
+            Point(point.row+1, point.col-1),
+            Point(point.row-1, point.col+1)
+
+        ).filter{ it.row in grid.indices && it.col in grid[it.row].indices}.toSet()
+    }
+
+
     data class GridSearch(val path: List<Point>, val cost: Long)
     fun <T> aStar(
             grid: List<List<T>>,
