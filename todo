@@ -1,0 +1,18 @@
+Graphs
+  - graph base class
+    - add vertex/edge
+    - rm vertex/edge
+  - max clique(s)
+  - a*/search?
+
+Grids
+  - encapsulate grid logic into proper class?
+  - SparseGrid object?
+  - put bestmap in grid search result?
+  - add a*/search variant that looks for all paths?
+
+Files
+  - read list with regex parser per row?
+  - read list with split per row?
+
+  Auto Caching
